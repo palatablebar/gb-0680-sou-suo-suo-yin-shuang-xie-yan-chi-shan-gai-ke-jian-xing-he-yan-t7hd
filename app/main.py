@@ -39,12 +39,19 @@ def create_app():
     def review(run_id):
         p=request.get_json(silent=True) or {}
         if not isinstance(p.get("version"),int): raise DomainError("BAD_VERSION","请提供版本号")
-        return store.review(run_id,p["version"],p.get("decision"))
+        return store.review(run_id,p["version"],p.get("decision"),p)
+    @application.post("/api/runs/<run_id>/exception-release")
+    def exception_release(run_id):
+        p=request.get_json(silent=True) or {}
+        if not isinstance(p.get("version"),int): raise DomainError("BAD_VERSION","请提供版本号")
+        return store.exception_release(run_id,p["version"],p)
+    @application.get("/api/runs/<run_id>/signoffs")
+    def signoffs(run_id): return {"events":store.events(run_id)}
     @application.get("/api/runs/<run_id>/archive")
     def archive(run_id):
         from app.archive import build_archive
         run=store.get(run_id)
-        return application.response_class(build_archive(run),mimetype="text/csv",headers={"Content-Disposition":'attachment; filename="evidence.csv"'})
+        return application.response_class(build_archive(run,store.events(run_id)),mimetype="text/csv",headers={"Content-Disposition":'attachment; filename="evidence.csv"'})
     for index,(slug,title) in enumerate(MODULES,1):
         module=importlib.import_module(f"app.modules.m{index}_{slug}.handler")
         application.register_blueprint(module.bp)

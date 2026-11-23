@@ -26,6 +26,10 @@
 | TRAP-14 | 重复键冲突 | 后写覆盖 | 保留首条并隔离冲突行 | `app/modules/m1_streams/rules.py` | `tests/test_m1.py::test_duplicate_conflict_real_sample` |
 | TRAP-18 | 空态三态 | 一律成功 | 分别错误码 | `app/modules/m1_streams/rules.py` | `tests/test_m1.py::test_three_empty_states` |
 | TRAP-26 | 旧版本提交 | 覆盖新结果 | 版本条件更新 | `app/store.py` | `tests/test_e2e.py::test_stale_review_409` |
+| TRAP-27 | 无人复核时提交人代签复核 | 越权签署、回补包失真 | 独立例外通道：仅提交人、强制理由、例外印记、事后补复核 | `app/store.py` `app/seal.py` | `tests/test_signoff.py` |
+| TRAP-28 | 页面与导出各算一份凭据 | 凭据不一致、无法互验 | 凭据只存一份（runs+signoff_events），页面与archive同读同签 | `app/archive.py` `app/seal.py` | `tests/test_signoff.py::test_page_and_archive_share_same_credential` |
+| TRAP-29 | 重跑批次重新签发 | 签署被改换、证据链断裂 | INSERT OR IGNORE复用批次行，仅追加事件链不可改写 | `app/store.py` | `tests/test_signoff.py::test_rerun_does_not_change_signoff` |
+| TRAP-30 | 例外补签换发新凭据 | 同一批次出现两套签发身份 | 复核补签沿用原credential_id锚点，仅新增动作签章 | `app/store.py` | `tests/test_signoff.py::test_review_after_exception_keeps_credential_anchor` |
 | TRAP-06 | 全角版本 | 解析失败 | Decimal归一 | `app/values.py` | `tests/test_m2.py::test_fullwidth_version` |
 | TRAP-07 | 缺版本 | 当零处理 | 空值隔离 | `app/values.py` | `tests/test_m2.py::test_real_sentinel_isolated` |
 | TRAP-09 | 超大版本 | JSON精度损失 | 文本序列化 | `app/values.py` | `tests/test_m2.py::test_large_version_precise` |
@@ -38,4 +42,4 @@
 
 ## 已知不覆盖
 
-4MB以上文件需预先按业务键分批；不模拟生产支付与外部回调。人工复核只变更批次状态，不改写原始记录。
+4MB以上文件需预先按业务键分批；不模拟生产支付与外部回调。人工签发只变更批次状态并追加事件，不改写原始记录；单机无登录体系，角色由请求声明、服务端强制校验，操作人标识随事件链永久留痕。

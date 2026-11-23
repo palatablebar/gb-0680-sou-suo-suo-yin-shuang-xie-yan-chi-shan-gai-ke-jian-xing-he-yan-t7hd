@@ -11,8 +11,8 @@ def test_idempotent_real_input(sample):
 def test_stale_review_409(client):
     "TRAP-26 陈旧复核不得覆盖新版本"
     p=client.post("/api/runs",json={"sample":"dirty.csv"}).get_json();u="/api/runs/"+p["run_id"]+"/review"
-    assert client.post(u,json={"version":1,"decision":"已复核"}).status_code==200
-    assert client.post(u,json={"version":1,"decision":"退回复核"}).status_code==409
+    assert client.post(u,json={"version":1,"decision":"已签发","actor":"李四","role":"复核人"}).status_code==200
+    assert client.post(u,json={"version":1,"decision":"退回复核","actor":"李四","role":"复核人"}).status_code==409
 def test_export_has_manifest_and_quarantine(client):
     p=client.post("/api/runs",json={"sample":"dirty.csv"}).get_json()
     r=client.get("/api/runs/"+p["run_id"]+"/archive")
